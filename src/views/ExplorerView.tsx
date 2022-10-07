@@ -18,6 +18,8 @@ import AddItemView, { } from './AddItemView';
 import { useFileSystem } from '../hooks/useFileSystem';
 import { FileSystemItem } from '../file-system/FileSystem';
 import ExplorerComponent from '../components/ExplorerComponent';
+import { Typography } from '@mui/material';
+import * as Path from 'path';
 
 interface ExplorerViewProps {
 }
@@ -66,10 +68,15 @@ const ExplorerView = (props: ExplorerViewProps) => {
         setCurrentItems(_currentItems.filter(item => item.name.includes(searchText)));
     }, [currentPath, searchText, createNewItemOpen]);
 
+    // calculations
+    const numFiles = currentItems.filter(item => item.type === "file").length;
+    const numFolders = currentItems.filter(item => item.type === "directory").length;
+
     return (
         <>
-            <Box sx={{ flexGrow: 1 }} className="explorer-view">
-                <Grid container spacing={1} xs={12}>
+            <Box className="explorer-view">
+                {/* need to make this grid extend all the way */}
+                <Grid container spacing={1} xs={12} className="explorer-view-container">
                     {/* Search bar */}
                     <Grid item xs={12} className="search-bar">
                         <TextField className="search-bar" label="Search" variant="outlined" value={searchText} onChange={(e) => setSearchText(e.target.value)} />
@@ -88,26 +95,40 @@ const ExplorerView = (props: ExplorerViewProps) => {
                     </Grid>
                     {/* Breadcrumbs and back button */}
                     <Grid container item xs={12}>
-                        {/* breadcrumbs should show each segment of the path */}
-                        <Breadcrumbs aria-label="breadcrumb">
-                            {currentPath.split('/').map((segment, index) => {
-                                return (
-                                    <Button key={index} onClick={() => setCurrentPath(currentPath.split('/').slice(0, index).join('/'))}>
-                                        {segment}
-                                    </Button>
-                                )
-                            })}
-                        </Breadcrumbs>
-                        <Button onClick={() => setCurrentPath(currentPath.split('/').slice(0, -1).join('/'))}>
-                            Back
-                        </Button>
+                        {/* create container to space out items */}
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                            {/* breadcrumbs should show each segment of the path */}
+                            <Breadcrumbs aria-label="breadcrumb">
+                                {/* 2 cases here, current path is root or not */}
+                                {currentPath === '/' ? <Button key='/'>Root</Button> : currentPath.split('/').map((segment, index) => {
+                                    // if the segment is empty, we are at the root
+                                    if (segment === '') {
+                                        return <Button key='/' onClick={() => setCurrentPath('/')}>Root</Button>
+                                    }
+                                    // otherwise, we need to create a button for each segment
+                                    // we also need to create a path for each segment
+                                    const path = currentPath.split('/').slice(0, index + 1).join('/');
+                                    return <Button key={path} onClick={() => setCurrentPath(path)}>{segment}</Button>
+                                })}
+                            </Breadcrumbs>
+                            <Button onClick={() => setCurrentPath(currentPath.split('/').slice(0, -1).join('/'))}>
+                                Back
+                            </Button>
+                        </Box>
                     </Grid>
-                    {/* Explorer view */}
-                    <Grid container xs={12}>
+                    {/* Explorer component */}
+                    <Grid item xs={12} className="explorer-component">
                         {/* explorer should expand to fille available space */}
-                        <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-                            <ExplorerComponent items={currentItems} onItemDoubleClick={handleOpenItem} />
-                        </Paper>
+                        <ExplorerComponent items={currentItems} onItemClick={handleOpenItem} />
+                    </Grid>
+                    {/* Total number of files and folders */}
+                    <Grid item xs={12} style={{ flexGrow: 0 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+                            {/* e.g. Total: 7 files and 2 folders */}
+                            <Typography variant="body2">
+                                Total: {numFiles} files and {numFolders} folders.
+                            </Typography>
+                        </Box>
                     </Grid>
                 </Grid>
             </Box>
@@ -118,9 +139,9 @@ const ExplorerView = (props: ExplorerViewProps) => {
                 type={createNewItemIsFile ? "file" : "directory"}
                 onConfirm={(name, contents) => {
                     if (createNewItemIsFile) {
-                        fileSystem.createFile(name, contents ?? '');
+                        fileSystem.createFile(Path.join(currentPath, name), contents ?? '');
                     } else {
-                        fileSystem.mkdir(name);
+                        fileSystem.mkdir(Path.join(currentPath, name));
                     }
                     setCreateNewItemOpen(false);
                 }}

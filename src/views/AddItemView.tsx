@@ -5,7 +5,7 @@
 // two actions: 1) "Cancel" and 2) "Create"
 
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ExplorerItemType } from '../components/ExplorerItem';
 import { Typography, Modal, Box, TextField, Button } from '@mui/material';
 
@@ -21,6 +21,12 @@ const AddItemView = (props: AddItemViewProps) => {
 
     const [name, setName] = useState('');
     const [contents, setContents] = useState('');
+
+    // empty name and contents when open changes
+    useEffect(() => {
+        setName('');
+        setContents('');
+    }, [open]);
 
     return (
         <Modal open={open} onClose={onClose}>

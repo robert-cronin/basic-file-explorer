@@ -10,10 +10,11 @@ import Box from '@mui/material/Box';
 import { FileSystemItem } from '../file-system/FileSystem';
 import FolderIcon from '@mui/icons-material/Folder';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import ExplorerItem, { ExplorerItemType, ExplorerItemProps } from '../components/ExplorerItem';
 
 interface ExplorerComponentProps {
     items: FileSystemItem[];
-    onItemDoubleClick: (item: FileSystemItem) => void;
+    onItemClick: (item: FileSystemItem) => void;
 }
 
 // since we might need our file explorer to be resizeable best way to go would be a grid layout
@@ -28,24 +29,40 @@ const Item = styled(Paper)(({ theme }) => ({
 }));
 
 const ExplorerComponent = (props: ExplorerComponentProps) => {
-    const { items, onItemDoubleClick } = props;
+    const { items, onItemClick } = props;
 
+    // layout items
     return (
-        <Box sx={{ flexGrow: 1 }}>
-            {/* layout items */}
-            <Grid container spacing={2}>
-                {/* need to show empty if there are no items in current folder */}
-                {items.length === 0 && <Item>Empty</Item>}
-                {items.length > 0 && items.map(item => (
-                    <Grid item xs={2} key={item.name}>
-                        <Item onDoubleClick={() => onItemDoubleClick(item)}>
-                            {item.type === 'directory' ? <FolderIcon /> : <InsertDriveFileIcon />}
-                            {item.name}
-                        </Item>
+        <Grid container item spacing={2}>
+            {/* need to show empty if there are no items in current folder */}
+            {items.length === 0 && (
+                <Grid item xs={12}>
+                    <Item>
+                        <h3>Empty</h3>
+                    </Item>
+                </Grid>
+            )}
+            {/* sort based on alphabetical but show folders first */}
+            {items.length > 0 && items
+                .sort((a, b) => {
+                    if (a.type === "directory" && b.type === "file") {
+                        return -1;
+                    } else if (a.type === "file" && b.type === "directory") {
+                        return 1;
+                    } else {
+                        return a.name.localeCompare(b.name);
+                    }
+                })
+                .map(item => (
+                    <Grid item xs={2} key={item.path}>
+                        <ExplorerItem
+                            name={item.name}
+                            type={item.type}
+                            onClick={() => onItemClick(item)}
+                        />
                     </Grid>
                 ))}
-            </Grid>
-        </Box>
+        </Grid>
     );
 }
 

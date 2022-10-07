@@ -30,11 +30,12 @@
     "@mui/icons-material": "^5.10.6",
     "@mui/material": "^5.10.8",
     "jest": "^29.1.2",
+    "memory-fs": "^0.5.0",
     "path-browserify": "^1.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "readable-stream": "^4.2.0",
     "serve": "^14.0.1",
-    "virtualfs": "^2.2.0",
     "webpack-cli": "^4.10.0"
   },
   "devDependencies": {

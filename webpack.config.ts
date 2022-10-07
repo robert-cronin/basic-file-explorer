@@ -17,6 +17,12 @@ const config: webpack.Configuration = {
         new HtmlWebpackPlugin({
             template: './public/index.html',
         }),
+        new webpack.ProvidePlugin({
+            process: 'process/browser',
+        }),
+        new webpack.ProvidePlugin({
+            Buffer: ['buffer', 'Buffer'],
+        }),
     ],
     devtool: 'source-map',
     devServer: {
@@ -30,6 +36,8 @@ const config: webpack.Configuration = {
         fallback: {
             path: require.resolve('path-browserify'),
             fs: false,
+            process: require.resolve('process/browser'),
+            buffer: require.resolve('buffer/'),
         },
     },
     module: {

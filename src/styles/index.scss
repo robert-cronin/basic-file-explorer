@@ -51,17 +51,29 @@ html, body {
     padding: 20px;
     /* set border */
     border: 1px solid black;
+    display: flex;
+}
+.explorer-view-container {
+    /* make container flex container */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
 }
 
-.add-view-item {
-    /* should have proper cursor */
-    cursor: pointer;
-    /* should highlight gray on hover */
-    
-    :hover {
-        background-color: gray;
-    }
-    
+.explorer-component {
+    flex-grow: 1;
+}
+
+.explorer-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.explorer-item-icon{
+    width: initial;
 }
 
 .search-bar {

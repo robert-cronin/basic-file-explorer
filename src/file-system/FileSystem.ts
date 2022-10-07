@@ -12,10 +12,9 @@
 // 8. go to directory (cd)
 // 9. back (cd ..)
 
-import * as vfs from 'virtualfs';
 // import the type fs to assign to vfs
-import type Fs from 'fs';
 import * as Path from 'path';
+import mfs from 'memory-fs';
 
 interface FileSystemItem {
     type: 'file' | 'directory';
@@ -23,19 +22,54 @@ interface FileSystemItem {
     path: string;
 }
 
-class FileSystem {
-    private fs: typeof Fs;
-    private cwd: string;
-    private root: string;
+interface FileSystemState {
+    cwd: string;
+    fs: JSON;
+}
 
-    constructor(fs: typeof Fs, root: string) {
-        this.fs = fs;
-        this.root = root;
-        this.cwd = root;
+class FileSystem {
+    private fs: any;
+    private cwd: string;
+
+    constructor() {
+        // getState if available
+        const state = this.getSate();
+        if (state) {
+            this.fs = new mfs(state.fs);
+            this.cwd = state.cwd;
+        } else {
+            this.fs = new mfs();
+            this.cwd = '/';
+        }
+    }
+
+    private getSate(): FileSystemState | null {
+        try {
+            const json = localStorage.getItem('mfs');
+            // parse the json
+            const state: FileSystemState = JSON.parse(json);
+            return state
+        } catch (error) {
+            return null
+        }
+    }
+
+    // create method for saving state
+    private saveState(): void {
+        // save the state of the file system
+        // state will be saved to local storage
+        // state includes: cwd and the state of the file system (json representing vfs)
+        const state = {
+            cwd: this.cwd,
+            fs: this.fs.data,
+        };
+        const json = JSON.stringify(state);
+        localStorage.setItem('mfs', json);
     }
 
     public chdir(dir: string): void {
         this.cwd = Path.join(this.cwd, dir);
+        this.saveState();
     }
 
     public readdir(path: string): FileSystemItem[] {
@@ -53,40 +87,45 @@ class FileSystem {
             items.push(item);
         }
 
-        return items;
+        // don't return any files that start with a .
+        return items.filter((item) => !item.name.startsWith('.'));
     }
 
     public mkdir(dir: string): void {
         this.fs.mkdirSync(Path.join(this.cwd, dir));
+        // we also must add a .keep file due to mfs not allowing empty directories
+        this.fs.writeFileSync(Path.join(this.cwd, dir, '.keep'), 'keep');
+        this.saveState();
     }
 
     public rmdir(dir: string): void {
         this.fs.rmdirSync(Path.join(this.cwd, dir));
+        this.saveState();
     }
 
     public createFile(file: string, contents = ''): void {
         this.fs.writeFileSync(Path.join(this.cwd, file), contents);
+        this.saveState();
     }
 
     public rm(file: string): void {
         this.fs.unlinkSync(Path.join(this.cwd, file));
+        this.saveState();
     }
 
     public pwd(): string {
         return this.cwd;
     }
 
-    public cd(dir: string): void {
-        this.cwd = Path.join(this.cwd, dir);
-    }
-
     public back(): void {
         this.cwd = Path.join(this.cwd, '..');
+        this.saveState();
     }
 
     // read file
     public readFile(file: string): string {
-        return this.fs.readFileSync(Path.join(this.cwd, file), 'utf8');
+        const _file = this.fs.readFileSync(Path.join(this.cwd, file));
+        return Buffer.from(_file).toString();
     }
 }
 
