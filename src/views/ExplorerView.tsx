@@ -21,16 +21,7 @@ import ExplorerComponent from '../components/ExplorerComponent';
 import { Typography } from '@mui/material';
 import * as Path from 'path';
 
-interface ExplorerViewProps {
-}
-
-const Item = styled(Paper)(({ theme }) => ({
-    backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
-    ...theme.typography.body2,
-    padding: theme.spacing(1),
-    textAlign: 'center',
-    color: theme.palette.text.secondary,
-}));
+interface ExplorerViewProps {}
 
 const ExplorerView = (props: ExplorerViewProps) => {
     const { } = props;
@@ -45,19 +36,36 @@ const ExplorerView = (props: ExplorerViewProps) => {
         setCreateNewItemOpen(true);
         setCreateNewItemIsFile(isFile);
     }
+    // track if user can go back
+    const [canGoBack, setCanGoBack] = useState(false);
 
     // create file explorer states
     const [searchText, setSearchText] = useState('');
     const [currentPath, setCurrentPath] = useState('/');
     const [currentItems, setCurrentItems] = useState<FileSystemItem[]>([]);
 
+    // keep track of total number of files and folders
+    const [totalFiles, setTotalFiles] = useState(0);
+    const [totalFolders, setTotalFolders] = useState(0);
+
     const handleOpenItem = (item: FileSystemItem) => {
         if (item.type === "directory") {
+            fileSystem.chdir(item.path);
             setCurrentPath(item.path);
         } else {
             // open file
             alert("File contets: " + fileSystem.readFile(item.path));
         }
+    }
+
+    const handleChangePath = (path: string) => {
+        fileSystem.chdir(path);
+        setCurrentPath(path);
+    }
+
+    const handleBack = () => {
+        const previousPath = fileSystem.back();
+        setCurrentPath(previousPath);
     }
 
     // upon view load and whenever the current path changes, we need to update the current items
@@ -68,9 +76,26 @@ const ExplorerView = (props: ExplorerViewProps) => {
         setCurrentItems(_currentItems.filter(item => item.name.includes(searchText)));
     }, [currentPath, searchText, createNewItemOpen]);
 
-    // calculations
-    const numFiles = currentItems.filter(item => item.type === "file").length;
-    const numFolders = currentItems.filter(item => item.type === "directory").length;
+    // everytime we chdir, want to get the new total count
+    useEffect(() => {
+        const {
+            totalFiles,
+            totalFolders
+        } = fileSystem.getTotalItems(currentPath);
+        setTotalFiles(totalFiles);
+        setTotalFolders(totalFolders);
+    }, [currentPath, createNewItemOpen]);
+
+    // update if user can go back
+    useEffect(() => {
+        setCanGoBack(fileSystem.canGoBack());
+    }, [currentPath]);
+
+    // upon load check which folder we are in from history
+    useEffect(() => {
+        const currentPath = fileSystem.pwd();
+        setCurrentPath(currentPath);
+    }, []);
 
     return (
         <>
@@ -84,10 +109,12 @@ const ExplorerView = (props: ExplorerViewProps) => {
                     {/* Create new file and folder buttons */}
                     <Grid item xs={12}>
                         {/* create container to justify to the right */}
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', spacing: 2 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-start', spacing: 2 }}>
                             <Button variant="contained" onClick={() => handleCreateNewItem(true)}>
                                 Create new file
                             </Button>
+                            {/* add some space */}
+                            <Box sx={{ width: 10 }} />
                             <Button variant="contained" onClick={() => handleCreateNewItem(false)}>
                                 Create new folder
                             </Button>
@@ -103,15 +130,16 @@ const ExplorerView = (props: ExplorerViewProps) => {
                                 {currentPath === '/' ? <Button key='/'>Root</Button> : currentPath.split('/').map((segment, index) => {
                                     // if the segment is empty, we are at the root
                                     if (segment === '') {
-                                        return <Button key='/' onClick={() => setCurrentPath('/')}>Root</Button>
+                                        return <Button key='/' onClick={() => handleChangePath('/')}>Root</Button>
                                     }
                                     // otherwise, we need to create a button for each segment
                                     // we also need to create a path for each segment
                                     const path = currentPath.split('/').slice(0, index + 1).join('/');
-                                    return <Button key={path} onClick={() => setCurrentPath(path)}>{segment}</Button>
+                                    return <Button key={path} onClick={() => handleChangePath(path)}>{segment}</Button>
                                 })}
                             </Breadcrumbs>
-                            <Button onClick={() => setCurrentPath(currentPath.split('/').slice(0, -1).join('/'))}>
+                            {/* navigate up one level in the cwdHistory if there is a history otherwise disable */}
+                            <Button variant="text" disabled={!canGoBack} onClick={handleBack}>
                                 Back
                             </Button>
                         </Box>
@@ -126,7 +154,7 @@ const ExplorerView = (props: ExplorerViewProps) => {
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
                             {/* e.g. Total: 7 files and 2 folders */}
                             <Typography variant="body2">
-                                Total: {numFiles} files and {numFolders} folders.
+                                Total: {totalFiles} files and {totalFolders} folders.
                             </Typography>
                         </Box>
                     </Grid>

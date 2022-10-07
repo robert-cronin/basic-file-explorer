@@ -24,22 +24,27 @@ interface FileSystemItem {
 
 interface FileSystemState {
     cwd: string;
+    cwdHistory: string[];
     fs: JSON;
 }
 
 class FileSystem {
     private fs: any;
     private cwd: string;
+    private cwdHistory: string[];
 
     constructor() {
         // getState if available
         const state = this.getSate();
+        debugger;
         if (state) {
             this.fs = new mfs(state.fs);
             this.cwd = state.cwd;
+            this.cwdHistory = state.cwdHistory ?? [];
         } else {
             this.fs = new mfs();
             this.cwd = '/';
+            this.cwdHistory = [];
         }
     }
 
@@ -62,13 +67,15 @@ class FileSystem {
         const state = {
             cwd: this.cwd,
             fs: this.fs.data,
+            cwdHistory: this.cwdHistory,
         };
         const json = JSON.stringify(state);
         localStorage.setItem('mfs', json);
     }
 
     public chdir(dir: string): void {
-        this.cwd = Path.join(this.cwd, dir);
+        this.cwdHistory.push(this.cwd);
+        this.cwd = dir
         this.saveState();
     }
 
@@ -91,25 +98,43 @@ class FileSystem {
         return items.filter((item) => !item.name.startsWith('.'));
     }
 
+    // get total items (files and folders) with recursion
+    public getTotalItems(dir: string): { totalFiles: number; totalFolders: number } {
+        const items = this.readdir(dir);
+        let totalFiles = 0;
+        let totalFolders = 0;
+        for (const item of items) {
+            if (item.type === 'directory') {
+                totalFolders++;
+                const { totalFiles: _totalFiles, totalFolders: _totalFolders } = this.getTotalItems(item.path);
+                totalFiles += _totalFiles;
+                totalFolders += _totalFolders;
+            } else {
+                totalFiles++;
+            }
+        }
+        return { totalFiles, totalFolders };
+    }
+
     public mkdir(dir: string): void {
-        this.fs.mkdirSync(Path.join(this.cwd, dir));
+        this.fs.mkdirSync(dir);
         // we also must add a .keep file due to mfs not allowing empty directories
-        this.fs.writeFileSync(Path.join(this.cwd, dir, '.keep'), 'keep');
+        this.fs.writeFileSync(Path.join(dir, '.keep'), 'keep');
         this.saveState();
     }
 
     public rmdir(dir: string): void {
-        this.fs.rmdirSync(Path.join(this.cwd, dir));
+        this.fs.rmdirSync(dir);
         this.saveState();
     }
 
     public createFile(file: string, contents = ''): void {
-        this.fs.writeFileSync(Path.join(this.cwd, file), contents);
+        this.fs.writeFileSync(file, contents);
         this.saveState();
     }
 
     public rm(file: string): void {
-        this.fs.unlinkSync(Path.join(this.cwd, file));
+        this.fs.unlinkSync(file);
         this.saveState();
     }
 
@@ -117,14 +142,24 @@ class FileSystem {
         return this.cwd;
     }
 
-    public back(): void {
-        this.cwd = Path.join(this.cwd, '..');
+    public back(): string {
+        const last = this.cwdHistory.pop();
+        debugger;
+        if (last) {
+            this.cwd = last;
+        }
         this.saveState();
+        return this.cwd
+    }
+    // method to check if user can go back 
+    public canGoBack(): boolean {
+        debugger;
+        return this.cwdHistory?.length > 0;
     }
 
     // read file
     public readFile(file: string): string {
-        const _file = this.fs.readFileSync(Path.join(this.cwd, file));
+        const _file = this.fs.readFileSync(file);
         return Buffer.from(_file).toString();
     }
 }

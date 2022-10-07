@@ -74,6 +74,8 @@ html, body {
 }
 .explorer-item-icon{
     width: initial;
+    display: flex;
+    justify-content: center;
 }
 
 .search-bar {

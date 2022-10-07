@@ -33,36 +33,42 @@ const ExplorerComponent = (props: ExplorerComponentProps) => {
 
     // layout items
     return (
-        <Grid container item spacing={2}>
+        <Grid container item spacing={2} style={{
+            minHeight: '50vh', border: '1px solid #ccc', borderRadius: '5px', margin: 'auto'
+        }}>
             {/* need to show empty if there are no items in current folder */}
-            {items.length === 0 && (
-                <Grid item xs={12}>
-                    <Item>
-                        <h3>Empty</h3>
-                    </Item>
-                </Grid>
-            )}
-            {/* sort based on alphabetical but show folders first */}
-            {items.length > 0 && items
-                .sort((a, b) => {
-                    if (a.type === "directory" && b.type === "file") {
-                        return -1;
-                    } else if (a.type === "file" && b.type === "directory") {
-                        return 1;
-                    } else {
-                        return a.name.localeCompare(b.name);
-                    }
-                })
-                .map(item => (
-                    <Grid item xs={2} key={item.path}>
-                        <ExplorerItem
-                            name={item.name}
-                            type={item.type}
-                            onClick={() => onItemClick(item)}
-                        />
+            {
+                items.length === 0 && (
+                    <Grid item xs={12} style={{ minHeight: '50vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <Item style={{ border: 'none', boxShadow: 'none' }}>
+                            <h3>Empty</h3>
+                        </Item>
                     </Grid>
-                ))}
-        </Grid>
+                )
+            }
+            {/* sort based on alphabetical but show folders first */}
+            {
+                items.length > 0 && items
+                    .sort((a, b) => {
+                        if (a.type === "directory" && b.type === "file") {
+                            return -1;
+                        } else if (a.type === "file" && b.type === "directory") {
+                            return 1;
+                        } else {
+                            return a.name.localeCompare(b.name);
+                        }
+                    })
+                    .map(item => (
+                        <Grid item xs={2} key={item.path}>
+                            <ExplorerItem
+                                name={item.name}
+                                type={item.type}
+                                onClick={() => onItemClick(item)}
+                            />
+                        </Grid>
+                    ))
+            }
+        </Grid >
     );
 }
 
