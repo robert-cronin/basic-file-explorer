@@ -6,12 +6,12 @@ import { useState } from "react";
 
 // this hook should use the file system context
 export function useFileSystem(): FileSystem {
-  const [fs, setFs] = useState<FileSystem>();
+    const [fileSystem, setFileSystem] = useState<FileSystem>();
+    if (!fileSystem) {
+      const fs = new FileSystem(new vfs.VirtualFS(), '/');
+      setFileSystem(fs);
+      return fs
+    }
 
-  if (fs === null) {
-    const fsInstance = new FileSystem(vfs, path.join(__dirname, "test"));
-    setFs(fsInstance);
-  }
-
-  return fs!;
+    return fileSystem
 }

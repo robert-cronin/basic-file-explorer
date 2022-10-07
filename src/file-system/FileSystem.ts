@@ -15,7 +15,7 @@
 import * as vfs from 'virtualfs';
 // import the type fs to assign to vfs
 import type Fs from 'fs';
-import * as path from 'path';
+import * as Path from 'path';
 
 interface FileSystemItem {
     type: 'file' | 'directory';
@@ -35,15 +35,15 @@ class FileSystem {
     }
 
     public chdir(dir: string): void {
-        this.cwd = path.join(this.cwd, dir);
+        this.cwd = Path.join(this.cwd, dir);
     }
 
-    public readdir(): FileSystemItem[] {
-        const files = this.fs.readdirSync(this.cwd);
+    public readdir(path: string): FileSystemItem[] {
+        const files = this.fs.readdirSync(path);
         const items: FileSystemItem[] = [];
 
         for (const file of files) {
-            const filePath = path.join(this.cwd, file);
+            const filePath = Path.join(path, file);
             const stats = this.fs.statSync(filePath);
             const item: FileSystemItem = {
                 type: stats.isDirectory() ? 'directory' : 'file',
@@ -57,19 +57,19 @@ class FileSystem {
     }
 
     public mkdir(dir: string): void {
-        this.fs.mkdirSync(path.join(this.cwd, dir));
+        this.fs.mkdirSync(Path.join(this.cwd, dir));
     }
 
     public rmdir(dir: string): void {
-        this.fs.rmdirSync(path.join(this.cwd, dir));
+        this.fs.rmdirSync(Path.join(this.cwd, dir));
     }
 
     public createFile(file: string, contents = ''): void {
-        this.fs.writeFileSync(path.join(this.cwd, file), contents);
+        this.fs.writeFileSync(Path.join(this.cwd, file), contents);
     }
 
     public rm(file: string): void {
-        this.fs.unlinkSync(path.join(this.cwd, file));
+        this.fs.unlinkSync(Path.join(this.cwd, file));
     }
 
     public pwd(): string {
@@ -77,11 +77,16 @@ class FileSystem {
     }
 
     public cd(dir: string): void {
-        this.cwd = path.join(this.cwd, dir);
+        this.cwd = Path.join(this.cwd, dir);
     }
 
     public back(): void {
-        this.cwd = path.join(this.cwd, '..');
+        this.cwd = Path.join(this.cwd, '..');
+    }
+
+    // read file
+    public readFile(file: string): string {
+        return this.fs.readFileSync(Path.join(this.cwd, file), 'utf8');
     }
 }
 

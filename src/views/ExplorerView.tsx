@@ -8,19 +8,27 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { styled } from '@mui/material/styles';
-import Grid from '@mui/material/Unstable_Grid2';
+import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import AddItemView, { } from './AddItemView';
-import { ExplorerItemType } from '../components/ExplorerItem';
 import { useFileSystem } from '../hooks/useFileSystem';
 import { FileSystemItem } from '../file-system/FileSystem';
+import ExplorerComponent from '../components/ExplorerComponent';
 
 interface ExplorerViewProps {
 }
+
+const Item = styled(Paper)(({ theme }) => ({
+    backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
+    ...theme.typography.body2,
+    padding: theme.spacing(1),
+    textAlign: 'center',
+    color: theme.palette.text.secondary,
+}));
 
 const ExplorerView = (props: ExplorerViewProps) => {
     const { } = props;
@@ -29,8 +37,8 @@ const ExplorerView = (props: ExplorerViewProps) => {
     const fileSystem = useFileSystem();
 
     // create new item state and actions
-    const [createNewItemOpen, setCreateNewItemOpen] = React.useState(false);
-    const [createNewItemIsFile, setCreateNewItemIsFile] = React.useState(false);
+    const [createNewItemOpen, setCreateNewItemOpen] = useState(false);
+    const [createNewItemIsFile, setCreateNewItemIsFile] = useState(false);
     const handleCreateNewItem = (isFile: boolean) => {
         setCreateNewItemOpen(true);
         setCreateNewItemIsFile(isFile);
@@ -38,36 +46,48 @@ const ExplorerView = (props: ExplorerViewProps) => {
 
     // create file explorer states
     const [searchText, setSearchText] = useState('');
-    const [currentPath, setCurrentPath] = useState('');
+    const [currentPath, setCurrentPath] = useState('/');
     const [currentItems, setCurrentItems] = useState<FileSystemItem[]>([]);
 
-
+    const handleOpenItem = (item: FileSystemItem) => {
+        if (item.type === "directory") {
+            setCurrentPath(item.path);
+        } else {
+            // open file
+            alert("File contets: " + fileSystem.readFile(item.path));
+        }
+    }
 
     // upon view load and whenever the current path changes, we need to update the current items
     // additionally, we filter based on the text, this should also be a dependency
     // since we might also add new items, we should also the modal open state as a dependency
     useEffect(() => {
-        const _currentItems = fileSystem.readdir();
+        const _currentItems = fileSystem.readdir(currentPath);
         setCurrentItems(_currentItems.filter(item => item.name.includes(searchText)));
     }, [currentPath, searchText, createNewItemOpen]);
 
     return (
         <>
-            <Box sx={{ flexGrow: 1 }}>
-                <Grid container spacing={2}>
+            <Box sx={{ flexGrow: 1 }} className="explorer-view">
+                <Grid container spacing={1} xs={12}>
                     {/* Search bar */}
-                    <TextField id="search-bar" label="Search" variant="outlined" value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+                    <Grid item xs={12} className="search-bar">
+                        <TextField className="search-bar" label="Search" variant="outlined" value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+                    </Grid>
                     {/* Create new file and folder buttons */}
-                    <Grid container xs={6}>
-                        <Button variant="contained" onClick={() => handleCreateNewItem(true)}>
-                            Create new file
-                        </Button>
-                        <Button variant="contained" onClick={() => handleCreateNewItem(false)}>
-                            Create new folder
-                        </Button>
+                    <Grid item xs={12}>
+                        {/* create container to justify to the right */}
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', spacing: 2 }}>
+                            <Button variant="contained" onClick={() => handleCreateNewItem(true)}>
+                                Create new file
+                            </Button>
+                            <Button variant="contained" onClick={() => handleCreateNewItem(false)}>
+                                Create new folder
+                            </Button>
+                        </Box>
                     </Grid>
                     {/* Breadcrumbs and back button */}
-                    <Grid container xs={6}>
+                    <Grid container item xs={12}>
                         {/* breadcrumbs should show each segment of the path */}
                         <Breadcrumbs aria-label="breadcrumb">
                             {currentPath.split('/').map((segment, index) => {
@@ -84,8 +104,9 @@ const ExplorerView = (props: ExplorerViewProps) => {
                     </Grid>
                     {/* Explorer view */}
                     <Grid container xs={12}>
-                        <Paper>
-                            <ExplorerView />
+                        {/* explorer should expand to fille available space */}
+                        <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+                            <ExplorerComponent items={currentItems} onItemDoubleClick={handleOpenItem} />
                         </Paper>
                     </Grid>
                 </Grid>
@@ -94,7 +115,7 @@ const ExplorerView = (props: ExplorerViewProps) => {
             <AddItemView
                 open={createNewItemOpen}
                 onClose={() => setCreateNewItemOpen(false)}
-                type={createNewItemIsFile ? ExplorerItemType.File : ExplorerItemType.Folder}
+                type={createNewItemIsFile ? "file" : "directory"}
                 onConfirm={(name, contents) => {
                     if (createNewItemIsFile) {
                         fileSystem.createFile(name, contents ?? '');

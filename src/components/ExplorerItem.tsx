@@ -7,10 +7,7 @@ import { ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import FolderIcon from '@mui/icons-material/Folder';
 import DescriptionIcon from '@mui/icons-material/Description';
 
-enum ExplorerItemType {
-    Folder,
-    File
-}
+type ExplorerItemType = 'directory' | 'file';
 
 interface ExplorerItemProps {
     name: string;
@@ -24,7 +21,7 @@ const ExplorerItem = (props: ExplorerItemProps) => {
     return (
         <ListItem button onDoubleClick={onDoubleClick}>
             <ListItemIcon>
-                {type === ExplorerItemType.Folder ? <FolderIcon /> : <DescriptionIcon />}
+                {type === "directory" ? <FolderIcon /> : <DescriptionIcon />}
             </ListItemIcon>
             <ListItemText primary={name} />
         </ListItem>

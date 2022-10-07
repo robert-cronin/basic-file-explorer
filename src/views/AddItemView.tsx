@@ -26,12 +26,12 @@ const AddItemView = (props: AddItemViewProps) => {
         <Modal open={open} onClose={onClose}>
             <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 400, bgcolor: 'background.paper', border: '2px solid #000', boxShadow: 24, p: 4 }}>
                 <Typography id="modal-modal-title" variant="h6" component="h2">
-                    {type === ExplorerItemType.File ? 'New File' : 'New Folder'}
+                    {type === "file" ? 'New File' : 'New Folder'}
                 </Typography>
                 {/* Name field */}
                 <TextField fullWidth id="name-field" label="Name" variant="outlined" value={name} onChange={(e) => setName(e.target.value)} />
                 {/* Content field (only for file) */}
-                {type === ExplorerItemType.File && (
+                {type === "file" && (
                     <TextField fullWidth id="content-field" label="Content" variant="outlined" value={contents} onChange={(e) => setContents(e.target.value)} />
                 )}
                 {/* Actions (should be on one line, right-aligned) */}
@@ -39,7 +39,7 @@ const AddItemView = (props: AddItemViewProps) => {
                     <Button variant="contained" onClick={onClose}>
                         Cancel
                     </Button>
-                    <Button variant="contained" onClick={() => onConfirm(name, type, contents)}>
+                    <Button variant="contained" onClick={() => onConfirm(name, contents)}>
                         Create
                     </Button>
                 </Box>
