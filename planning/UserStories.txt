@@ -1,0 +1,15 @@
+User stories:
+1. User can create a new folder by specifying name (in modal window).
+2. User can create a new file by specifying name and content (simple text) (in modal window).
+3. User can navigate over folders (folders can contain other files and folders). By double clicking on
+folder’s icon.
+4. User can open a file to check its content (double click).
+5. Folders and files are created in user’s current location.
+6. Entering text in search string should trigger a “filtration” request. Showing All files and folders
+containing entered substring in their name and/or content (for files). Please treat this
+functionality as if it was a real request to a real server.
+7. (Optional) Please show totals in right bottom corner (all files and all folders in all subfolders
+relative to current user’s location).
+8. (Optional) User’s location and created content must be saved between page reloads.
+9. (Optional) Please add a basic navigation (clickable breadcrumbs and back button utilising
+history)

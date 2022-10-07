@@ -1,0 +1,14 @@
+Requirements:
+1. Use Typescript and React.
+2. Use React functional components and hooks.
+3. Write clean and reusable code. Avoid unnecessary mutations.
+4. Provide a working solution, that we can run locally by “yarn install, yarn start”
+5. Your solution should work at least in current version of Chrome browser.
+6. You can use any libraries you want as long as they are not implementing the core requested
+functionality (e.g. you cannot use file explorer libraries)
+7. You can write a simple server if you want to. But you are also free to use whatever solution you
+might find suitable. It’s also ok to keep it frontend only.
+8. You are free to use any state management library if you want.
+9. Additional points for using Material-UI.
+10. CRA and similar – are fine.
+11. Wireframes are for guidance only; you don’t have to repeat the designs.
